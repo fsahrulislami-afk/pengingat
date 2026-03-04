@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kawaii Dashboard + Snooze ✨</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-soft: #fdf2f8;
+            --main-pink: #fda4af;
+            --soft-mint: #a7f3d0;
+            --soft-purple: #ddd6fe;
+            --soft-yellow: #fef08a;
+            --text-dark: #4b5563;
+            --danger: #ff4d4f;
+        }
+
+        body {
+            background: linear-gradient(135deg, #fce7f3, #e0e7ff);
+            font-family: 'Fredoka', sans-serif;
+            color: var(--text-dark);
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box;
+        }
+
+        /* Dashboard Layout */
+        .dashboard { display: flex; flex-wrap: wrap; gap: 20px; width: 100%; max-width: 900px; z-index: 10; }
+
+        .card {
+            flex: 1 1 350px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(15px);
+            padding: 30px; border-radius: 40px; box-shadow: 0 15px 30px rgba(253, 164, 175, 0.2);
+            border: 4px solid white; display: flex; flex-direction: column;
+        }
+
+        h2 { font-size: 22px; color: var(--main-pink); text-align: center; margin-bottom: 20px; }
+
+        /* Input Styles */
+        .chip-container { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 15px; }
+        .chip { border: none; padding: 8px 12px; border-radius: 15px; font-family: 'Fredoka', sans-serif; cursor: pointer; transition: 0.2s; font-size: 13px; }
+        .c-pink { background: #ffe4e6; color: #e11d48; }
+        .chip:hover { transform: scale(1.05); background: var(--main-pink); color: white; }
+
+        .input-box { width: 100%; padding: 12px; border-radius: 15px; border: 3px solid #f3f4f6; margin-bottom: 10px; box-sizing: border-box; font-family: 'Fredoka'; outline: none; }
+        .btn-gas { width: 100%; background: var(--main-pink); color: white; border: none; padding: 15px; border-radius: 20px; font-weight: 600; cursor: pointer; box-shadow: 0 6px 0px #e11d48; margin-top: auto; }
+        .btn-gas:active { transform: translateY(4px); box-shadow: 0 2px 0px #e11d48; }
+
+        /* Countdown Area */
+        .countdown-box { border: 3px dashed var(--soft-mint); border-radius: 25px; padding: 20px; text-align: center; margin-bottom: 15px; transition: 0.4s; background: white; }
+        .cd-timer { font-size: 32px; font-weight: 700; color: var(--text-dark); }
+        .urgent { animation: pulse 1s infinite; border-color: var(--danger); background: #fff1f2; }
+        @keyframes pulse { 50% { transform: scale(1.03); box-shadow: 0 0 15px rgba(255,77,79,0.3); } }
+
+        /* Queue List */
+        .queue-list { list-style: none; padding: 0; margin: 0; max-height: 180px; overflow-y: auto; }
+        .queue-item { display: flex; align-items: center; background: #f9fafb; padding: 10px 15px; border-radius: 15px; margin-bottom: 8px; border: 2px solid #f3f4f6; }
+        .q-time { background: var(--soft-purple); color: #4c1d95; padding: 4px 8px; border-radius: 10px; font-size: 12px; font-weight: 700; margin-right: 10px; }
+        .q-name { flex: 1; font-size: 14px; }
+        .btn-del { border: none; background: none; color: #ef4444; font-weight: bold; cursor: pointer; font-size: 16px; }
+
+        /* Modal Notif */
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; justify-content: center; align-items: center; z-index: 999; backdrop-filter: blur(8px); }
+        .modal { background: white; padding: 35px; border-radius: 40px; text-align: center; width: 85%; max-width: 320px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
+        .modal h3 { margin: 10px 0; color: var(--text-dark); }
+        .modal-btns { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+        .btn-m { padding: 12px; border-radius: 15px; border: none; font-family: 'Fredoka'; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .btn-ok { background: var(--soft-mint); color: #065f46; }
+        .btn-snooze { background: var(--soft-yellow); color: #854d0e; }
+        .btn-m:hover { opacity: 0.8; transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard">
+        <div class="card">
+            <h2>Rencana Hari Ini 🎀</h2>
+            <div class="chip-container">
+                <button class="chip c-pink" onclick="pick('Belajar 📚')">Belajar</button>
+                <button class="chip c-pink" onclick="pick('Mandi 🚿')">Mandi</button>
+                <button class="chip c-pink" onclick="pick('Makan 🍜')">Makan</button>
+                <button class="chip c-pink" onclick="pick('Sholat 🕌')">Sholat</button>
+            </div>
+            <input type="text" id="nama" class="input-box" placeholder="Nama kegiatan...">
+            <input type="time" id="waktu" class="input-box">
+            <button class="btn-gas" onclick="tambahAntrian()">TAMBAH KE DAFTAR ✨</button>
+        </div>
+
+        <div class="card">
+            <h2>Monitor Waktu ⏳</h2>
+            <div id="cd-box" class="countdown-box">
+                <div style="font-size: 12px; opacity: 0.6;" id="cd-title">Siap Membantu!</div>
+                <div style="font-size: 18px; font-weight: 700; color: var(--main-pink);" id="cd-task">-</div>
+                <div class="cd-timer" id="cd-timer">00:00:00</div>
+            </div>
+            <ul class="queue-list" id="queue-list"></ul>
+        </div>
+    </div>
+
+    <div id="overlay" class="overlay">
+        <div class="modal">
+            <span style="font-size: 50px;">🔔</span>
+            <h3 id="notif-text">Waktunya!</h3>
+            <div class="modal-btns">
+                <button class="btn-m btn-ok" onclick="tutupNotif()">Selesai ✅</button>
+                <button class="btn-m btn-snooze" onclick="tundaLimaMenit()">Tunda 5 Menit 😴</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let antrian = [];
+        let tugasAktif = null; // Menyimpan tugas yang sedang bunyi
+
+        function pick(v) { document.getElementById('nama').value = v; }
+
+        function formatTime(date) {
+            return date.getHours().toString().padStart(2,'0') + ":" + date.getMinutes().toString().padStart(2,'0');
+        }
+
+        function tambahAntrian(manualNama = null, manualTarget = null) {
+            const nama = manualNama || document.getElementById('nama').value.trim();
+            const waktuStr = manualTarget ? formatTime(manualTarget) : document.getElementById('waktu').value;
+
+            if (!nama || (manualTarget === null && !waktuStr)) return alert("Isi data dulu ya!");
+
+            let target;
+            if (manualTarget) {
+                target = manualTarget;
+            } else {
+                const [h, m] = waktuStr.split(':').map(Number);
+                target = new Date();
+                target.setHours(h, m, 0, 0);
+                if (target < new Date()) target.setDate(target.getDate() + 1);
+            }
+
+            antrian.push({ id: Date.now(), nama, waktuStr: formatTime(target), target });
+            antrian.sort((a, b) => a.target - b.target);
+            
+            if (!manualNama) {
+                document.getElementById('nama').value = "";
+                document.getElementById('waktu').value = "";
+            }
+            renderUI();
+        }
+
+        function renderUI() {
+            const list = document.getElementById('queue-list');
+            list.innerHTML = antrian.length ? "" : "<p style='text-align:center; font-size:13px; color:#999; margin-top:20px;'>Belum ada rencana...</p>";
+            antrian.forEach(item => {
+                list.innerHTML += `<li class="queue-item">
+                    <span class="q-time">${item.waktuStr}</span>
+                    <span class="q-name">${item.nama}</span>
+                    <button class="btn-del" onclick="hapusAntrian(${item.id})">✖</button>
+                </li>`;
+            });
+        }
+
+        function hapusAntrian(id) {
+            antrian = antrian.filter(i => i.id !== id);
+            renderUI();
+        }
+
+        // Timer Logic
+        setInterval(() => {
+            if (!antrian.length) {
+                document.getElementById('cd-timer').innerText = "00:00:00";
+                document.getElementById('cd-task').innerText = "-";
+                document.getElementById('cd-box').classList.remove('urgent');
+                return;
+            }
+
+            const skrg = new Date();
+            const next = antrian[0];
+            const selisih = next.target - skrg;
+
+            if (selisih <= 0) {
+                tugasAktif = { ...next };
+                document.getElementById('notif-text').innerText = "Waktunya: " + next.nama;
+                document.getElementById('overlay').style.display = "flex";
+                antrian.shift();
+                renderUI();
+                return;
+            }
+
+            const h = Math.floor(selisih / 3600000);
+            const m = Math.floor((selisih % 3600000) / 60000);
+            const s = Math.floor((selisih % 60000) / 1000);
+
+            document.getElementById('cd-task').innerText = next.nama;
+            document.getElementById('cd-timer').innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+            
+            // Animasi Urgent jika < 1 menit
+            document.getElementById('cd-box').classList.toggle('urgent', selisih < 60000);
+        }, 1000);
+
+        function tutupNotif() {
+            document.getElementById('overlay').style.display = "none";
+            tugasAktif = null;
+        }
+
+        function tundaLimaMenit() {
+            if (!tugasAktif) return;
+            
+            // Tambah waktu 5 menit dari SEKARANG
+            const waktuBaru = new Date();
+            waktuBaru.setMinutes(waktuBaru.getMinutes() + 5);
+            
+            // Masukkan kembali ke antrian
+            tambahAntrian(tugasAktif.nama, waktuBaru);
+            
+            document.getElementById('overlay').style.display = "none";
+            alert(`Siaapp! "${tugasAktif.nama}" ditunda 5 menit yaa. ✨`);
+            tugasAktif = null;
+        }
+    </script>
+</body>
+</html>
